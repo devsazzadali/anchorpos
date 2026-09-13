@@ -6,7 +6,10 @@ export default async function HomePage() {
 
   // 1. Authenticate user and get their business_id (using RLS for safety)
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
+  const { cookies } = await import('next/headers')
+  const isDemoAuth = cookies().get('pos_demo_auth')?.value === 'true'
+  
+  if (!user && !isDemoAuth) {
     // If not authenticated, redirect or handle. Middleware should catch this, but just in case.
     return <div>Unauthorized</div>
   }
