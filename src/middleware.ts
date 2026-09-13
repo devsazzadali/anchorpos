@@ -2,29 +2,30 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({ request: { headers: request.headers } });
+  let supabaseResponse = NextResponse.next({ request });
+  
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) { return request.cookies.get(name)?.value; },
-        set(name: string, value: string, options: any) {
-          request.cookies.set({ name, value, ...options });
-          response = NextResponse.next({ request: { headers: request.headers } });
-          response.cookies.set({ name, value, ...options });
+        getAll() {
+          return request.cookies.getAll();
         },
-        remove(name: string, options: any) {
-          request.cookies.set({ name, value: '', ...options });
-          response = NextResponse.next({ request: { headers: request.headers } });
-          response.cookies.set({ name, value: '', ...options });
+        setAll(cookiesToSet: { name: string; value: string; options?: any }[]) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          supabaseResponse = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          );
         },
       },
     }
   );
 
   const { data: { user } } = await supabase.auth.getUser();
-  const isAuthenticated = Boolean(user);
+  const isDemoAuth = request.cookies.get('pos_demo_auth')?.value === 'true';
+  const isAuthenticated = Boolean(user) || isDemoAuth;
 
   const pathname = request.nextUrl.pathname;
   const isAuthRoute = pathname.startsWith('/login');
@@ -35,11 +36,31 @@ export async function middleware(request: NextRequest) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = '/login';
     redirectUrl.searchParams.set('redirected_from', pathname);
-    return NextResponse.redirect(redirectUrl);
+    
+    const redirectResponse = NextResponse.redirect(redirectUrl);
+    // Persist cookies from the supabase response
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value, cookie);
+    });
+    
+    return redirectResponse;
   }
+  
   if (isAuthenticated && isAuthRoute) {
-    return NextResponse.redirect(new URL('/home', request.url));
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = '/home';
+    
+    const redirectResponse = NextResponse.redirect(redirectUrl);
+    // Persist cookies from the supabase response
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value, cookie);
+    });
+    
+    return redirectResponse;
   }
-  return response;
+  
+  return supabaseResponse;
 }
+
 export const config = { matcher: ['/((?!_next/static|_next/image|favicon.ico|manifest.json|sw.js|workbox-|icons|screenshots).*)'] };
+

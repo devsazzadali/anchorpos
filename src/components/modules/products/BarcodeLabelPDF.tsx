@@ -1,4 +1,5 @@
 // src/components/modules/products/BarcodeLabelPDF.tsx
+/* eslint-disable jsx-a11y/alt-text */
 // Dynamic import only (ssr: false)
 "use client"
 
