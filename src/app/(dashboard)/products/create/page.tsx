@@ -37,10 +37,41 @@ export default function CreateProductPage() {
   const onSubmit = async (data: ProductFormValues) => {
     setIsSubmitting(true)
     try {
-      // TODO: Connect to ProductService (Phase 8 Task 144)
-      console.log("Submitting:", data)
+      const productId = crypto.randomUUID()
+      const businessId = "00000000-0000-0000-0000-000000000000" // Fallback; would be pulled from auth/session
       
-      await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate network
+      const newProduct = {
+        id: productId,
+        business_id: businessId,
+        type: data.type,
+        name: data.name,
+        sku: data.sku || `SKU-${Date.now()}`,
+        barcode_type: data.barcode_type,
+        category_id: data.category_id || null,
+        category_name: null,
+        brand_id: data.brand_id || null,
+        brand_name: null,
+        unit_id: data.unit_id || null,
+        unit_name: null,
+        tax_id: data.tax_id || null,
+        tax_rate: 0,
+        tax_method: data.tax_method,
+        unit_price: data.unit_price,
+        purchase_price: data.purchase_price || 0,
+        alert_quantity: data.alert_quantity || 0,
+        image_url: null,
+        is_active: true,
+        updated_at: new Date().toISOString(),
+        _synced: false
+      }
+
+      // 1. Save locally
+      const { db } = await import("@/lib/db/db")
+      await db.products.put(newProduct as any)
+
+      // 2. Queue for background sync
+      const { SyncEngine } = await import("@/lib/db/sync")
+      await SyncEngine.enqueue('INSERT', 'products', productId, newProduct, 2)
       
       toast({
         title: "Product Created",

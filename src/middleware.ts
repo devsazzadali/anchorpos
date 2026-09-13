@@ -24,8 +24,7 @@ export async function middleware(request: NextRequest) {
   );
 
   const { data: { user } } = await supabase.auth.getUser();
-  const demoAuth = request.cookies.get('pos_demo_auth')?.value === 'true';
-  const isAuthenticated = Boolean(user || demoAuth);
+  const isAuthenticated = Boolean(user);
 
   const pathname = request.nextUrl.pathname;
   const isAuthRoute = pathname.startsWith('/login');

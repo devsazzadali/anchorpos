@@ -110,7 +110,7 @@ export class SyncEngine {
               const table = db[item.table as keyof typeof db] as any;
               await table.update(item.record_id, { _synced: true, _sync_error: null });
             } catch (e) {
-              // Ignore local update errors
+              console.error('Local sync success update failed:', e);
             }
           }
         } else {
@@ -129,7 +129,9 @@ export class SyncEngine {
              try {
               const table = db[item.table as keyof typeof db] as any;
               await table.update(item.record_id, { _synced: false, _sync_error: errorMessage });
-            } catch (e) {}
+            } catch (e) {
+              console.error('Local sync error update failed:', e);
+            }
           }
         }
       }
@@ -151,7 +153,7 @@ export class SyncEngine {
       // 1. Pull Products
       const { data: products } = await supabase
         .from('products')
-        .select('*')
+        .select('*, categories(name), brands(name), units(short_name)')
         .eq('business_id', businessId)
         .is('deleted_at', null);
 
@@ -159,14 +161,14 @@ export class SyncEngine {
         await db.products.bulkPut(
           (products as any[]).map(p => ({
             ...p,
-            category_name: null, // Would come from joined data in real query
-            brand_name: null,
-            unit_name: null,
-            tax_rate: 0,
-            tax_method: 'exclusive',
-            alert_quantity: 0,
-            image_url: null,
-            barcode_type: null,
+            category_name: p.categories?.name || null,
+            brand_name: p.brands?.name || null,
+            unit_name: p.units?.short_name || null,
+            tax_rate: p.tax_rate ?? 0,
+            tax_method: p.tax_method ?? 'exclusive',
+            alert_quantity: p.alert_quantity ?? 0,
+            image_url: p.image_url ?? null,
+            barcode_type: p.barcode_type ?? null,
             _synced: true,
           }))
         );
