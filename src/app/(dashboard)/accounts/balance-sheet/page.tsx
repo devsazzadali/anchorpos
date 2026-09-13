@@ -92,7 +92,7 @@ export default function BalanceSheetPage() {
         <div className="flex items-center gap-3">
           <CheckCircle2 className="w-5 h-5 text-emerald-400" />
           <span className="text-sm font-semibold text-emerald-300">
-            Books are balanced: Total Assets = Total Liabilities + Owner's Equity
+            Books are balanced: Total Assets = Total Liabilities + Owner&apos;s Equity
           </span>
         </div>
         <div className="text-sm font-mono font-bold text-emerald-400">
@@ -192,7 +192,7 @@ export default function BalanceSheetPage() {
 
           {/* Owner Equity */}
           <div className="space-y-3 pt-4 border-t border-surface-800">
-            <div className="text-xs font-semibold uppercase text-purple-400 tracking-wider">Owner's Equity</div>
+            <div className="text-xs font-semibold uppercase text-purple-400 tracking-wider">Owner&apos;s Equity</div>
             <div className="space-y-2 text-sm pl-2 border-l-2 border-purple-500/30">
               <div className="flex justify-between items-center">
                 <span className="text-surface-300">Initial Owner Capital Contribution</span>

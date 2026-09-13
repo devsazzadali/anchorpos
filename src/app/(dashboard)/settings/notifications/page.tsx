@@ -235,7 +235,7 @@ export default function NotificationTemplatesPage() {
             </div>
             <div className="p-3 rounded-lg bg-surface-800/60 border border-surface-700 text-xs text-surface-300 space-y-1">
               <div className="text-surface-400 font-semibold">Sample Rendered Payload:</div>
-              <p className="italic text-brand-300">"Dear Sazzad Ali, your invoice INV-2026-0042 for ৳ 1,200.00 is confirmed at Rangpur Bike Parlour. Thank you!"</p>
+              <p className="italic text-brand-300">&ldquo;Dear Sazzad Ali, your invoice INV-2026-0042 for ৳ 1,200.00 is confirmed at Rangpur Bike Parlour. Thank you!&rdquo;</p>
             </div>
           </div>
           <DialogFooter className="gap-2">

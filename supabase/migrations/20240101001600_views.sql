@@ -27,18 +27,34 @@ CREATE VIEW v_sell_summary AS
 
 -- Profit & Loss per month
 CREATE VIEW v_profit_loss AS
-  SELECT s.business_id,
-    DATE_TRUNC('month', s.sell_date) AS month,
-    SUM(s.grand_total) AS total_sales,
-    SUM(s.tax_amount) AS total_tax_collected,
-    SUM(s.discount_amount) AS total_discounts_given,
-    (SELECT COALESCE(SUM(e.amount),0) FROM expenses e
-     WHERE e.business_id = s.business_id
-       AND DATE_TRUNC('month', e.expense_date) = DATE_TRUNC('month', s.sell_date)
-       AND e.deleted_at IS NULL) AS total_expenses
-  FROM sells s
-  WHERE s.deleted_at IS NULL AND s.status = 'final'
-  GROUP BY s.business_id, DATE_TRUNC('month', s.sell_date);
+  WITH monthly_sales AS (
+    SELECT business_id,
+      DATE_TRUNC('month', sell_date) AS month,
+      SUM(grand_total) AS total_sales,
+      SUM(tax_amount) AS total_tax_collected,
+      SUM(discount_amount) AS total_discounts_given
+    FROM sells
+    WHERE deleted_at IS NULL AND status = 'final'
+    GROUP BY business_id, DATE_TRUNC('month', sell_date)
+  ),
+  monthly_expenses AS (
+    SELECT business_id,
+      DATE_TRUNC('month', expense_date) AS month,
+      SUM(amount) AS total_expenses
+    FROM expenses
+    WHERE deleted_at IS NULL
+    GROUP BY business_id, DATE_TRUNC('month', expense_date)
+  )
+  SELECT 
+    COALESCE(s.business_id, e.business_id) AS business_id,
+    COALESCE(s.month, e.month) AS month,
+    COALESCE(s.total_sales, 0) AS total_sales,
+    COALESCE(s.total_tax_collected, 0) AS total_tax_collected,
+    COALESCE(s.total_discounts_given, 0) AS total_discounts_given,
+    COALESCE(e.total_expenses, 0) AS total_expenses
+  FROM monthly_sales s
+  FULL OUTER JOIN monthly_expenses e 
+    ON s.business_id = e.business_id AND s.month = e.month;
 
 -- Trending products (last 30 days)
 CREATE VIEW v_trending_products AS

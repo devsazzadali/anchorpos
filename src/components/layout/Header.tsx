@@ -44,9 +44,6 @@ export function Header() {
   const [commandSearch, setCommandSearch] = useState("")
   const [unreadNotifications, setUnreadNotifications] = useState(3)
 
-  if (pathname === "/pos") return null
-
-
   // Sync audio state
   useEffect(() => {
     setMuted(isAudioMuted())
@@ -82,6 +79,8 @@ export function Header() {
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [])
+
+  if (pathname === "/pos") return null
 
   const handleToggleFullscreen = () => {
     playClick()

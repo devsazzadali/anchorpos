@@ -214,7 +214,7 @@ export default function AddStockAdjustmentPage() {
                 {lines.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-4 py-6 text-center text-surface-500 text-xs">
-                      No products added yet. Select a motorcycle part above and click "Add to List".
+                      No products added yet. Select a motorcycle part above and click &ldquo;Add to List&rdquo;.
                     </td>
                   </tr>
                 ) : (
