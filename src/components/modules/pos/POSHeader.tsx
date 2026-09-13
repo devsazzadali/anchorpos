@@ -62,7 +62,7 @@ export default function POSHeader({ search = "", onSearchChange }: POSHeaderProp
 
   return (
     <>
-      <header className="h-16 shrink-0 glass border-b border-white/5 flex items-center justify-between px-4 z-20 shadow-md relative">
+      <header className="h-16 shrink-0 glass-panel rounded-2xl border border-white/10 flex items-center justify-between px-4 z-20 shadow-[0_8px_30px_rgb(0,0,0,0.4)] relative backdrop-blur-xl">
         {/* Left Side: Brand, Back to Dashboard & Online Status */}
         <div className="flex items-center gap-3">
           <Link

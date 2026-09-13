@@ -105,7 +105,7 @@ export default function POSProducts({ searchQuery = "" }: POSProductsProps) {
   }
 
   return (
-    <div className="flex flex-col h-full bg-surface-950 p-4 sm:p-6 overflow-hidden">
+    <div className="flex flex-col h-full bg-transparent p-4 sm:p-6 overflow-hidden relative z-10">
       {/* Category Pills & Quick Filter */}
       <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-3 shrink-0 scrollbar-thin">
         {CATEGORIES.map((cat) => {
@@ -118,15 +118,15 @@ export default function POSProducts({ searchQuery = "" }: POSProductsProps) {
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className={`whitespace-nowrap px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-150 flex items-center gap-2 border ${
+              className={`whitespace-nowrap px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-300 flex items-center gap-2 border backdrop-blur-md ${
                 isActive
-                  ? "bg-brand-500 text-white border-brand-400 shadow-glow"
-                  : "bg-surface-900/90 text-surface-400 hover:text-white hover:bg-surface-800 border-surface-800"
+                  ? "bg-brand-500 text-white border-brand-400 shadow-[0_0_20px_rgba(var(--brand-500),0.4)]"
+                  : "bg-surface-900/40 text-surface-400 hover:text-white hover:bg-surface-800/60 border-white/5"
               }`}
             >
               <span>{cat}</span>
               <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
-                isActive ? "bg-white/25 text-white" : "bg-surface-800 text-surface-400"
+                isActive ? "bg-white/25 text-white" : "bg-surface-800/50 text-surface-400"
               }`}>
                 {count}
               </span>
@@ -149,7 +149,7 @@ export default function POSProducts({ searchQuery = "" }: POSProductsProps) {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3.5 pb-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-4 pb-8">
             {filteredProducts.map((product) => {
               const outOfStock = product.stock <= 0
               const Icon = product.categoryIcon
@@ -159,12 +159,12 @@ export default function POSProducts({ searchQuery = "" }: POSProductsProps) {
                 <div
                   key={product.id}
                   onClick={() => handleProductClick(product)}
-                  className={`relative flex flex-col rounded-2xl p-3.5 border transition-all duration-200 cursor-pointer group select-none ${
+                  className={`relative flex flex-col rounded-3xl p-4 border transition-all duration-300 cursor-pointer group select-none backdrop-blur-xl bento-card ${
                     outOfStock
-                      ? "opacity-40 border-surface-800 cursor-not-allowed bg-surface-900/40"
+                      ? "opacity-40 border-white/5 cursor-not-allowed bg-surface-900/20"
                       : inCartQty > 0
-                      ? "bg-surface-900/90 border-brand-500 shadow-glow"
-                      : "bg-surface-900/70 border-surface-800 hover:border-brand-500/50 hover:bg-surface-900 hover:shadow-glow hover:-translate-y-0.5"
+                      ? "glass-luxury border-brand-400 shadow-[0_0_30px_rgba(var(--brand-500),0.3)] scale-[1.02] z-10"
+                      : "glass-panel border-white/5 hover:border-brand-500/30 hover:shadow-[0_0_20px_rgba(var(--brand-500),0.15)] hover:-translate-y-1 hover:scale-[1.01]"
                   }`}
                 >
                   {/* Top Bar: Brand & Stock */}

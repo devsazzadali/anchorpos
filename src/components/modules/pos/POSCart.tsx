@@ -101,9 +101,9 @@ export default function POSCart() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-surface-950 text-white relative select-none">
+    <div className="flex flex-col h-full bg-transparent text-white relative select-none z-10">
       {/* Customer Selection Bar */}
-      <div className="p-3.5 border-b border-surface-800 bg-surface-900/60 shrink-0">
+      <div className="p-3.5 border-b border-white/10 bg-surface-900/40 backdrop-blur-md shrink-0">
         <div className="flex items-center gap-2">
           {/* Customer Dropdown */}
           <DropdownMenu>
@@ -165,7 +165,7 @@ export default function POSCart() {
           items.map((item) => (
             <div
               key={item.id}
-              className="flex flex-col p-3 rounded-xl bg-surface-900/90 border border-surface-800 hover:border-brand-500/40 transition-all group"
+              className="flex flex-col p-3 rounded-2xl glass-panel border border-white/5 hover:border-brand-500/40 hover:shadow-[0_0_15px_rgba(var(--brand-500),0.2)] transition-all group"
             >
               <div className="flex justify-between items-start gap-2 mb-2">
                 <span className="font-medium text-xs text-surface-200 line-clamp-2 leading-snug">
@@ -216,7 +216,7 @@ export default function POSCart() {
       </div>
 
       {/* Cart Quick Utility Toolbar (Discount, Note, Hold, Clear) */}
-      <div className="px-3.5 py-2 border-t border-surface-800 bg-surface-900/40 flex items-center justify-between gap-1.5 shrink-0 text-xs">
+      <div className="px-3.5 py-2 border-t border-white/5 bg-surface-900/20 backdrop-blur-sm flex items-center justify-between gap-1.5 shrink-0 text-xs">
         <Button
           variant="ghost"
           size="sm"
@@ -267,7 +267,7 @@ export default function POSCart() {
       </div>
 
       {/* Totals & Quick Payment Footer */}
-      <div className="p-4 bg-surface-900 border-t border-surface-800 shadow-2xl shrink-0 z-10 space-y-3">
+      <div className="p-5 bg-surface-900/40 backdrop-blur-xl border-t border-white/10 shadow-2xl shrink-0 z-10 space-y-4">
         {/* Financial Summary */}
         <div className="space-y-1.5 text-xs">
           <div className="flex justify-between text-surface-400">
@@ -334,7 +334,7 @@ export default function POSCart() {
         <Button
           onClick={() => { playClick(); setIsPaymentOpen(true) }}
           disabled={items.length === 0}
-          className="w-full h-12 text-sm font-bold bg-brand-600 hover:bg-brand-500 text-white shadow-glow disabled:opacity-50 disabled:shadow-none rounded-xl"
+          className="w-full h-14 text-sm font-bold bg-brand-600 hover:bg-brand-500 text-white shadow-[0_0_20px_rgba(var(--brand-500),0.4)] hover:shadow-[0_0_30px_rgba(var(--brand-500),0.6)] disabled:opacity-50 disabled:shadow-none rounded-2xl transition-all"
         >
           <span>Confirm Sale (F10)</span>
           <ArrowRight className="ml-2 h-4 w-4" />
