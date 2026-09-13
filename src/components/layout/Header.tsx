@@ -152,7 +152,8 @@ export function Header() {
 
   return (
     <>
-      <header className="h-16 px-6 glass border-b border-white/5 flex items-center justify-between shrink-0 sticky top-0 z-30 shadow-md">
+      <div className="px-6 pt-6 pb-2 shrink-0 sticky top-0 z-30 pointer-events-none">
+        <header className="h-16 px-6 glass-panel rounded-2xl flex items-center justify-between shadow-2xl pointer-events-auto border-white/10">
         {/* Left Side: Global Search / Command Bar */}
         <div className="flex items-center gap-4 flex-1 max-w-xl">
           <button
@@ -364,6 +365,7 @@ export function Header() {
           </div>
         </div>
       </header>
+      </div>
 
       {/* Command Palette Dialog */}
       <Dialog open={isCommandOpen} onOpenChange={setIsCommandOpen}>

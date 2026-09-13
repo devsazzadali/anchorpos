@@ -176,8 +176,8 @@ export function Sidebar() {
   if (pathname === '/pos') return null
 
   return (
-    <aside className="w-64 glass-panel border-r border-white/5 flex flex-col h-screen sticky top-0 shrink-0 select-none">
-      <div className="h-16 flex items-center px-5 border-b border-white/5 shrink-0 justify-between">
+    <aside className="w-[280px] m-4 mr-0 rounded-2xl glass-panel border border-white/5 flex flex-col h-[calc(100vh-2rem)] sticky top-4 shrink-0 select-none overflow-hidden shadow-2xl z-20">
+      <div className="h-20 flex items-center px-6 border-b border-white/5 shrink-0 justify-between bg-surface-900/40">
         <Link href="/home" className="flex items-center gap-3 group">
           <div className="w-8 h-8 rounded bg-gradient-brand flex items-center justify-center shadow-glow group-hover:scale-105 transition-transform">
             <span className="font-display font-bold text-white text-lg">D</span>

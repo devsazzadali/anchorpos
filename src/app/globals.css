@@ -46,44 +46,73 @@
   }
   body {
     @apply bg-background text-foreground min-h-screen selection:bg-brand-500 selection:text-white;
+    background-color: #050508;
     background-image: 
-      radial-gradient(ellipse at 100% 0%, rgba(124, 58, 237, 0.15) 0%, transparent 40%),
-      radial-gradient(ellipse at 0% 100%, rgba(99, 102, 241, 0.12) 0%, transparent 40%),
-      radial-gradient(circle at 50% 50%, rgba(9, 9, 11, 0.6) 0%, transparent 100%),
-      linear-gradient(135deg, #09090b 0%, #000000 100%);
+      radial-gradient(ellipse at 80% 0%, rgba(90, 103, 245, 0.15) 0%, transparent 40%),
+      radial-gradient(ellipse at 20% 100%, rgba(124, 77, 255, 0.1) 0%, transparent 40%),
+      radial-gradient(circle at 50% 50%, rgba(9, 9, 11, 0.4) 0%, transparent 100%),
+      linear-gradient(180deg, #050508 0%, #0a0a0f 100%);
     background-attachment: fixed;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
   
   /* Micro-interaction for buttons */
   button:not(:disabled), [role="button"]:not(:disabled) {
-    @apply active:scale-[0.98] transition-transform;
+    @apply active:scale-[0.97] transition-transform duration-200;
   }
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar - Invisible until hovered (macOS style) */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  @apply bg-surface-700/60 hover:bg-surface-600 rounded-full transition-colors;
+  @apply bg-surface-700/0 hover:bg-brand-500/50 rounded-full transition-all duration-300;
+}
+*:hover::-webkit-scrollbar-thumb {
+  @apply bg-surface-700/40;
 }
 
-/* Glassmorphism Luxury Utilities */
+/* Glassmorphism & Bento Box Utilities */
 .glass {
   @apply bg-surface-900/60 backdrop-blur-2xl border border-white/[0.05] shadow-lg;
 }
 .glass-panel {
-  @apply bg-surface-900/40 backdrop-blur-3xl border border-white/[0.06] shadow-card hover:border-white/[0.12] transition-all duration-300;
+  @apply bg-surface-900/30 backdrop-blur-xl border border-white/[0.04] shadow-card transition-all duration-300;
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 }
+.glass-panel:hover {
+  @apply border-white/[0.08] shadow-card-hover bg-surface-900/40;
+}
+
+.bento-card {
+  @apply relative overflow-hidden bg-surface-900/40 backdrop-blur-2xl border border-white/[0.03] shadow-2xl transition-all duration-500 ease-out;
+  border-radius: 1.5rem;
+}
+.bento-card:hover {
+  @apply border-white/[0.08] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)];
+  transform: translateY(-2px);
+}
+.bento-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0) 60%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
 .glass-luxury {
-  background: linear-gradient(135deg, rgba(20, 20, 24, 0.7) 0%, rgba(9, 9, 11, 0.8) 100%);
-  backdrop-filter: blur(24px);
+  background: linear-gradient(135deg, rgba(20, 20, 24, 0.6) 0%, rgba(9, 9, 11, 0.8) 100%);
+  backdrop-filter: blur(40px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
