@@ -1,15 +1,15 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { usePOSStore } from "@/store/pos"
 import { formatCurrency } from "@/lib/utils/currency"
 import { playBeep } from "@/lib/utils/audio"
 import { useToast } from "@/hooks/use-toast"
+import { getSupabaseClient } from "@/lib/supabase/client"
 import { 
   PackageOpen, Sparkles, Droplets, Shield, 
-  Disc, CircleDot, Zap, Wrench, Search, Tag
+  Disc, CircleDot, Zap, Wrench, Search, Tag, Loader2
 } from "lucide-react"
-import { Input } from "@/components/ui/input"
 
 export interface ProductItem {
   id: string
@@ -23,25 +23,6 @@ export interface ProductItem {
   gradient: string
 }
 
-// ── Real Rangpur Bike Parlour Product Catalog ──────────────────────────────
-export const POS_CATALOG: ProductItem[] = [
-  { id: '1', sku: 'PROD0001', name: 'Motul 7100 4T 10W40 (1L Synthetic)', category: 'Engine Oils & Lubes', brand: 'Motul', price: 180000, stock: 40, categoryIcon: Droplets, gradient: 'from-amber-500/20 to-orange-500/10' },
-  { id: '2', sku: 'PROD0002', name: 'Helmet Standard Full Face (DOT Certified)', category: 'Helmets & Gear', brand: 'Yamaha', price: 120000, stock: 10, categoryIcon: Shield, gradient: 'from-blue-500/20 to-indigo-500/10' },
-  { id: '3', sku: 'PROD0003', name: 'Chain Lube Motul 100ml Spray', category: 'Engine Oils & Lubes', brand: 'Motul', price: 45000, stock: 50, categoryIcon: Droplets, gradient: 'from-amber-500/20 to-orange-500/10' },
-  { id: '4', sku: 'PROD0004', name: 'Yamaha R15 V3 OEM Air Filter Element', category: 'Electrical & Parts', brand: 'Yamaha', price: 65000, stock: 24, categoryIcon: Wrench, gradient: 'from-emerald-500/20 to-teal-500/10' },
-  { id: '5', sku: 'PROD0005', name: 'NGK Laser Iridium Spark Plug CR9EIX', category: 'Electrical & Parts', brand: 'NGK', price: 85000, stock: 35, categoryIcon: Zap, gradient: 'from-yellow-500/20 to-amber-500/10' },
-  { id: '6', sku: 'PROD0006', name: 'Brembo Sintered Front Brake Pads', category: 'Braking & Drive', brand: 'Brembo', price: 145000, stock: 18, categoryIcon: Disc, gradient: 'from-red-500/20 to-rose-500/10' },
-  { id: '7', sku: 'PROD0007', name: 'Michelin Pilot Street 100/80-17 Tubeless', category: 'Tyres & Wheels', brand: 'Michelin', price: 480000, stock: 12, categoryIcon: CircleDot, gradient: 'from-cyan-500/20 to-blue-500/10' },
-  { id: '8', sku: 'PROD0008', name: 'DID 428 O-Ring Heavy Duty Chain & Sprocket', category: 'Braking & Drive', brand: 'DID', price: 350000, stock: 15, categoryIcon: Disc, gradient: 'from-red-500/20 to-rose-500/10' },
-  { id: '9', sku: 'PROD0009', name: 'LED Headlight Bulb H4 6000K Ultra Beam', category: 'Electrical & Parts', brand: 'Osram', price: 110000, stock: 20, categoryIcon: Zap, gradient: 'from-yellow-500/20 to-amber-500/10' },
-  { id: '10', sku: 'PROD0010', name: 'Clutch Cable Wire Yamaha FZ-S V2/V3', category: 'Braking & Drive', brand: 'Yamaha', price: 28000, stock: 30, categoryIcon: Wrench, gradient: 'from-purple-500/20 to-pink-500/10' },
-  { id: '11', sku: 'PROD0011', name: 'Castrol Power1 4T 20W-50 1L Engine Oil', category: 'Engine Oils & Lubes', brand: 'Castrol', price: 62000, stock: 45, categoryIcon: Droplets, gradient: 'from-emerald-500/20 to-green-500/10' },
-  { id: '12', sku: 'PROD0012', name: 'Steelmate Two-Way Remote Security Alarm', category: 'Electrical & Parts', brand: 'Steelmate', price: 220000, stock: 8, categoryIcon: Zap, gradient: 'from-blue-500/20 to-indigo-500/10' },
-  { id: '13', sku: 'PROD0013', name: 'Front Stainless Steel Disc Rotor 282mm', category: 'Braking & Drive', brand: 'Brembo', price: 260000, stock: 6, categoryIcon: Disc, gradient: 'from-red-500/20 to-rose-500/10' },
-  { id: '14', sku: 'PROD0014', name: 'Tubeless Tyre Brass Air Valve (Pair)', category: 'Tyres & Wheels', brand: 'Generic', price: 12000, stock: 80, categoryIcon: CircleDot, gradient: 'from-cyan-500/20 to-blue-500/10' },
-  { id: '15', sku: 'PROD0015', name: 'Pro-Biker Hard Knuckle Riding Gloves', category: 'Helmets & Gear', brand: 'Pro-Biker', price: 85000, stock: 22, categoryIcon: Shield, gradient: 'from-purple-500/20 to-pink-500/10' },
-]
-
 const CATEGORIES = [
   "All",
   "Engine Oils & Lubes",
@@ -49,6 +30,17 @@ const CATEGORIES = [
   "Tyres & Wheels",
   "Helmets & Gear",
   "Electrical & Parts",
+]
+
+const ICONS = [Droplets, Shield, Wrench, Zap, Disc, CircleDot]
+const GRADIENTS = [
+  'from-amber-500/20 to-orange-500/10',
+  'from-blue-500/20 to-indigo-500/10',
+  'from-emerald-500/20 to-teal-500/10',
+  'from-yellow-500/20 to-amber-500/10',
+  'from-red-500/20 to-rose-500/10',
+  'from-cyan-500/20 to-blue-500/10',
+  'from-purple-500/20 to-pink-500/10'
 ]
 
 interface POSProductsProps {
@@ -60,11 +52,53 @@ export default function POSProducts({ searchQuery = "" }: POSProductsProps) {
   const { addItem, cart } = usePOSStore()
   const [activeCategory, setActiveCategory] = useState("All")
   const [internalSearch, setInternalSearch] = useState("")
+  
+  const [products, setProducts] = useState<ProductItem[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        const supabase = getSupabaseClient()
+        // Note: For Phase 3, we temporarily pull everything. Later, implement pagination.
+        const { data, error } = await supabase.from('products').select('*')
+        
+        if (error) throw error
+
+        if (data) {
+          // Map DB response to UI expected format (filling in missing fields with mocks)
+          const mapped: ProductItem[] = data.map((item: any, i: number) => {
+            return {
+              id: item.id,
+              sku: item.sku || `SKU-${i}`,
+              name: item.name,
+              category: CATEGORIES[(i % (CATEGORIES.length - 1)) + 1], // distribute categories
+              brand: "Databyte", // Default brand
+              price: item.unit_price || item.price || 0, // Fallback based on schema variant
+              stock: 99, // MOCK STOCK (STORY-401 pending)
+              categoryIcon: ICONS[i % ICONS.length],
+              gradient: GRADIENTS[i % GRADIENTS.length]
+            }
+          })
+          setProducts(mapped)
+        }
+      } catch (err: any) {
+        toast({
+          title: "Error loading products",
+          description: err.message,
+          variant: "destructive"
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchProducts()
+  }, [toast])
 
   const effectiveSearch = searchQuery || internalSearch
 
   const filteredProducts = useMemo(() => {
-    return POS_CATALOG.filter((p) => {
+    return products.filter((p) => {
       const matchCategory = activeCategory === "All" || p.category === activeCategory
       const query = effectiveSearch.toLowerCase().trim()
       const matchSearch =
@@ -75,7 +109,7 @@ export default function POSProducts({ searchQuery = "" }: POSProductsProps) {
 
       return matchCategory && matchSearch
     })
-  }, [activeCategory, effectiveSearch])
+  }, [activeCategory, effectiveSearch, products])
 
   const handleProductClick = (p: ProductItem) => {
     if (p.stock <= 0) {
@@ -104,14 +138,23 @@ export default function POSProducts({ searchQuery = "" }: POSProductsProps) {
     })
   }
 
+  if (loading) {
+    return (
+      <div className="flex flex-col h-full items-center justify-center space-y-4">
+        <Loader2 className="w-8 h-8 text-brand-500 animate-spin" />
+        <p className="text-surface-400 text-sm font-mono tracking-widest uppercase">Syncing Catalog...</p>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col h-full bg-transparent p-4 sm:p-6 overflow-hidden relative z-10">
       {/* Category Pills & Quick Filter */}
       <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-3 shrink-0 scrollbar-thin">
         {CATEGORIES.map((cat) => {
           const count = cat === "All" 
-            ? POS_CATALOG.length 
-            : POS_CATALOG.filter(p => p.category === cat).length
+            ? products.length 
+            : products.filter(p => p.category === cat).length
           const isActive = activeCategory === cat
 
           return (
