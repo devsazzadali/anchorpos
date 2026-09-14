@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { 
   Trash2, UserPlus, CreditCard, Banknote, Smartphone, Clock, 
   ArrowRight, ShoppingCart, Percent, FileText, PauseCircle,
@@ -15,15 +15,15 @@ import { usePOSStore } from "@/store/pos"
 import { formatCurrency } from "@/lib/utils/currency"
 import { playClick, playBeep } from "@/lib/utils/audio"
 import { useToast } from "@/hooks/use-toast"
+import { getSupabaseClient } from "@/lib/supabase/client"
 import { POSPaymentModal } from "./POSPaymentModal"
 import { POSReceiptModal } from "./POSReceiptModal"
 
-const SAMPLE_CUSTOMERS = [
-  { id: '1', name: 'Walk-In Customer', phone: 'N/A' },
-  { id: '2', name: 'Rahim Chowdhury', phone: '01711-223344' },
-  { id: '3', name: 'Karim Ullah (Bike Garage)', phone: '01819-556677' },
-  { id: '4', name: 'Rahat Bikes Ltd', phone: '01912-998877' },
-]
+interface CustomerItem {
+  id: string
+  name: string
+  phone: string
+}
 
 export default function POSCart() {
   const { toast } = useToast()
@@ -54,6 +54,32 @@ export default function POSCart() {
   const [noteText, setNoteText] = useState("")
 
   const [isHeldOpen, setIsHeldOpen] = useState(false)
+
+  // Live Customers State
+  const [customers, setCustomers] = useState<CustomerItem[]>([
+    { id: '1', name: 'Walk-In Customer', phone: 'N/A' }
+  ])
+
+  useEffect(() => {
+    async function fetchCustomers() {
+      const supabase = getSupabaseClient()
+      const { data, error } = await supabase
+        .from('contacts')
+        .select('id, name, mobile, type')
+        // if type exists, we filter, else just bring all contacts for now
+        // .eq('type', 'customer')
+
+      if (data) {
+        const liveCustomers = data.map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          phone: c.mobile || 'N/A'
+        }))
+        setCustomers([{ id: '1', name: 'Walk-In Customer', phone: 'N/A' }, ...liveCustomers])
+      }
+    }
+    fetchCustomers()
+  }, [])
 
   // Handlers
   const handleAddCustomer = () => {
@@ -117,7 +143,7 @@ export default function POSCart() {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-64 bg-surface-900 border-surface-700 text-surface-200">
-              {SAMPLE_CUSTOMERS.map((cust) => (
+              {customers.map((cust) => (
                 <DropdownMenuItem
                   key={cust.id}
                   onClick={() => {
