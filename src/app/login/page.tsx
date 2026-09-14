@@ -5,6 +5,8 @@ import LoginForm from './LoginForm';
 import { ShieldCheck, Zap, Globe, Layers, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
+export const dynamic = 'force-dynamic';
+
 export default async function LoginPage() {
   const supabase = createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
