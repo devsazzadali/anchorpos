@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
-import { formatCurrency, toBDTPaise, paise_to_display } from "@/lib/utils/currency"
+import { formatCurrency, toBDTPaise, paise_to_display, calculateDiscountPct, computeLineTotal } from "@/lib/utils/currency"
 import { playClick } from "@/lib/utils/audio"
 
 interface PurchaseLine {
@@ -46,7 +46,7 @@ export default function CreatePurchasePage() {
 
   // Calculations
   const linesTotal = lines.reduce((sum, line) => sum + line.subtotal, 0)
-  const discountAmt = linesTotal * (discountPct / 100)
+  const discountAmt = calculateDiscountPct(linesTotal, discountPct)
   const grandTotal = linesTotal - discountAmt + shipping
 
   const handleAddPart = () => {
@@ -59,7 +59,7 @@ export default function CreatePurchasePage() {
       setLines(lines.map(l => l.sku === part.sku ? {
         ...l,
         qty: l.qty + addQty,
-        subtotal: (l.qty + addQty) * l.unitCost
+        subtotal: computeLineTotal({ quantity: l.qty + addQty, unitPricePaise: l.unitCost, discountAmountPaise: 0, taxAmountPaise: 0 })
       } : l))
     } else {
       const newLine: PurchaseLine = {
@@ -68,7 +68,7 @@ export default function CreatePurchasePage() {
         sku: part.sku,
         qty: addQty,
         unitCost: part.unitCost,
-        subtotal: addQty * part.unitCost
+        subtotal: computeLineTotal({ quantity: addQty, unitPricePaise: part.unitCost, discountAmountPaise: 0, taxAmountPaise: 0 })
       }
       setLines([...lines, newLine])
     }
@@ -114,11 +114,11 @@ export default function CreatePurchasePage() {
 
   const updateLineQty = (id: string, qty: number) => {
     if (qty < 1) return
-    setLines(lines.map(l => l.id === id ? { ...l, qty, subtotal: qty * l.unitCost } : l))
+    setLines(lines.map(l => l.id === id ? { ...l, qty, subtotal: computeLineTotal({ quantity: qty, unitPricePaise: l.unitCost, discountAmountPaise: 0, taxAmountPaise: 0 }) } : l))
   }
   
   const updateLineCost = (id: string, costPaise: number) => {
-    setLines(lines.map(l => l.id === id ? { ...l, unitCost: costPaise, subtotal: l.qty * costPaise } : l))
+    setLines(lines.map(l => l.id === id ? { ...l, unitCost: costPaise, subtotal: computeLineTotal({ quantity: l.qty, unitPricePaise: costPaise, discountAmountPaise: 0, taxAmountPaise: 0 }) } : l))
   }
 
   const removeLine = (id: string) => {

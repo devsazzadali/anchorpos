@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { printCurrentWindow } from "@/lib/utils/export"
 import { playClick, playSuccess } from "@/lib/utils/audio"
 import { useToast } from "@/hooks/use-toast"
-import { parseAmountInput, paise_to_display } from "@/lib/utils/currency"
+import { parseAmountInput, paise_to_display, calculateTax, computeLineTotal } from "@/lib/utils/currency"
 
 interface SaleLineItem {
   id: string
@@ -67,7 +67,7 @@ export default function CreateSalePage() {
   // Calculations
   const rawSubtotal = items.reduce((sum, item) => sum + item.subtotal, 0)
   const discountedSubtotal = Math.max(0, rawSubtotal - orderDiscount)
-  const taxAmount = Math.round((discountedSubtotal * taxRate) / 100)
+  const { taxAmount } = calculateTax(discountedSubtotal, taxRate, 'exclusive')
   const grandTotal = discountedSubtotal + taxAmount + shipping
 
   const handleAddItem = (prodId: string) => {
@@ -83,7 +83,7 @@ export default function CreateSalePage() {
           return {
             ...item,
             qty: newQty,
-            subtotal: (item.price * newQty) - item.discount
+            subtotal: computeLineTotal({ quantity: newQty, unitPricePaise: item.price, discountAmountPaise: item.discount, taxAmountPaise: 0 })
           }
         }
         return item
@@ -115,7 +115,7 @@ export default function CreateSalePage() {
         return {
           ...item,
           qty,
-          subtotal: (item.price * qty) - item.discount
+          subtotal: computeLineTotal({ quantity: qty, unitPricePaise: item.price, discountAmountPaise: item.discount, taxAmountPaise: 0 })
         }
       }
       return item
@@ -128,7 +128,7 @@ export default function CreateSalePage() {
         return {
           ...item,
           discount,
-          subtotal: Math.max(0, (item.price * item.qty) - discount)
+          subtotal: computeLineTotal({ quantity: item.qty, unitPricePaise: item.price, discountAmountPaise: discount, taxAmountPaise: 0 })
         }
       }
       return item
