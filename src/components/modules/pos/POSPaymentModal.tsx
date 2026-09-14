@@ -12,6 +12,8 @@ import { formatCurrency } from "@/lib/utils/currency"
 import { usePOSStore } from "@/store/pos"
 import { playSuccess, playClick } from "@/lib/utils/audio"
 import { useToast } from "@/hooks/use-toast"
+import { processCheckout } from "@/app/actions/checkout"
+import { Loader2 } from "lucide-react"
 
 interface POSPaymentModalProps {
   open: boolean
@@ -23,8 +25,10 @@ export function POSPaymentModal({ open, onClose, onSaleComplete }: POSPaymentMod
   const { toast } = useToast()
   const { 
     cart, grand_total, subtotal, total_tax, total_discount, 
-    customer_name, order_notes, clearCart 
+    customer_id, customer_name, order_notes, clearCart 
   } = usePOSStore()
+
+  const [isProcessing, setIsProcessing] = useState(false)
 
   const [activeTab, setActiveTab] = useState<'cash' | 'bkash' | 'nagad' | 'card' | 'due'>('cash')
   const [tenderedPaise, setTenderedPaise] = useState<number>(0)
@@ -54,16 +58,20 @@ export function POSPaymentModal({ open, onClose, onSaleComplete }: POSPaymentMod
     setTenderedPaise(grand_total)
   }
 
-  const handleComplete = () => {
-    playSuccess()
+  const handleComplete = async () => {
+    setIsProcessing(true)
 
     const invoiceNo = `INV-2026-${Math.floor(1000 + Math.random() * 9000)}`
     const now = new Date()
+    
+    // Prepare data for receipt modal and server action
+    const itemsArray = Array.from(cart.values())
+    
     const invoiceData = {
       invoiceNo,
       date: now.toLocaleString("en-BD", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
       customerName: customer_name || "Walk-In Customer",
-      items: Array.from(cart.values()),
+      items: itemsArray,
       subtotal,
       tax: total_tax,
       discount: total_discount,
@@ -73,15 +81,44 @@ export function POSPaymentModal({ open, onClose, onSaleComplete }: POSPaymentMod
       paymentMethod: activeTab,
     }
 
-    toast({
-      title: "Sale Confirmed!",
-      description: `Invoice ${invoiceNo} created for ${formatCurrency(grand_total)}`,
-      duration: 3000,
-    })
+    try {
+      const response = await processCheckout({
+        invoiceNo,
+        customer_id,
+        subtotal,
+        tax: total_tax,
+        discount: total_discount,
+        grandTotal: grand_total,
+        tendered: isDue ? 0 : tenderedPaise,
+        change: isDue ? 0 : changePaise,
+        paymentMethod: activeTab,
+        items: itemsArray,
+      })
 
-    clearCart()
-    onClose()
-    onSaleComplete(invoiceData)
+      if (!response.success) {
+        throw new Error(response.error)
+      }
+
+      playSuccess()
+      toast({
+        title: "Sale Confirmed!",
+        description: `Invoice ${invoiceNo} created successfully.`,
+        duration: 3000,
+      })
+
+      clearCart()
+      onClose()
+      onSaleComplete(invoiceData)
+
+    } catch (err: any) {
+      toast({
+        title: "Transaction Failed",
+        description: err.message || "An error occurred while saving the sale.",
+        variant: "destructive"
+      })
+    } finally {
+      setIsProcessing(false)
+    }
   }
 
   return (
@@ -284,11 +321,17 @@ export function POSPaymentModal({ open, onClose, onSaleComplete }: POSPaymentMod
           </Button>
           <Button
             onClick={handleComplete}
-            disabled={isCompleteDisabled}
+            disabled={isCompleteDisabled || isProcessing}
             className="flex-2 bg-brand-600 hover:bg-brand-500 text-white font-bold text-base shadow-glow h-12 disabled:opacity-50 disabled:shadow-none"
           >
-            Confirm & Print Receipt
-            <ArrowRight className="w-5 h-5 ml-2" />
+            {isProcessing ? (
+              <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+            ) : (
+              <>
+                Confirm & Print Receipt
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </>
+            )}
           </Button>
         </div>
       </DialogContent>
