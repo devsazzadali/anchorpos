@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { exportToCsv } from "@/lib/utils/export"
 import { playClick } from "@/lib/utils/audio"
 import { useToast } from "@/hooks/use-toast"
+import { parseAmountInput, paise_to_display } from "@/lib/utils/currency"
 
 interface PriceItem {
   id: string
@@ -25,10 +26,10 @@ const INITIAL_PRODUCTS: PriceItem[] = [
     name: "Motul 7100 4T 10W40 (1L)",
     sku: "MOT-7100-1L",
     category: "Parts",
-    currentCost: 380.00,
-    newCost: 380.00,
-    currentPrice: 450.00,
-    newPrice: 450.00,
+    currentCost: 38000,
+    newCost: 38000,
+    currentPrice: 45000,
+    newPrice: 45000,
     stock: 40
   },
   {
@@ -36,10 +37,10 @@ const INITIAL_PRODUCTS: PriceItem[] = [
     name: "KYT TT-Course Helmet Standard",
     sku: "KYT-TTC-01",
     category: "Accessories",
-    currentCost: 1000.00,
-    newCost: 1000.00,
-    currentPrice: 1200.00,
-    newPrice: 1200.00,
+    currentCost: 100000,
+    newCost: 100000,
+    currentPrice: 120000,
+    newPrice: 120000,
     stock: 10
   },
   {
@@ -47,10 +48,10 @@ const INITIAL_PRODUCTS: PriceItem[] = [
     name: "Motul C2 Chain Lube 100ml",
     sku: "MOT-C2-100",
     category: "Accessories",
-    currentCost: 80.00,
-    newCost: 80.00,
-    currentPrice: 120.00,
-    newPrice: 120.00,
+    currentCost: 8000,
+    newCost: 8000,
+    currentPrice: 12000,
+    newPrice: 12000,
     stock: 50
   },
   {
@@ -58,10 +59,10 @@ const INITIAL_PRODUCTS: PriceItem[] = [
     name: "NGK Laser Iridium Spark Plug",
     sku: "NGK-CR9EIX",
     category: "Parts",
-    currentCost: 750.00,
-    newCost: 750.00,
-    currentPrice: 900.00,
-    newPrice: 900.00,
+    currentCost: 75000,
+    newCost: 75000,
+    currentPrice: 90000,
+    newPrice: 90000,
     stock: 25
   },
   {
@@ -69,10 +70,10 @@ const INITIAL_PRODUCTS: PriceItem[] = [
     name: "Brembo Sintered Brake Pads (Front)",
     sku: "BRM-BP-SIN",
     category: "Parts",
-    currentCost: 1350.00,
-    newCost: 1350.00,
-    currentPrice: 1650.00,
-    newPrice: 1650.00,
+    currentCost: 135000,
+    newCost: 135000,
+    currentPrice: 165000,
+    newPrice: 165000,
     stock: 12
   }
 ]
@@ -117,7 +118,11 @@ export default function UpdatePricePage() {
       { header: "Purchase Cost (BDT)", key: "currentCost" },
       { header: "Selling Price (BDT)", key: "currentPrice" },
       { header: "Current Stock", key: "stock" }
-    ], filtered)
+    ], filtered.map(p => ({
+      ...p,
+      currentCost: (p.currentCost / 100).toFixed(2),
+      currentPrice: (p.currentPrice / 100).toFixed(2)
+    })))
     toast({
       title: "Export Completed",
       description: "Price catalog exported as CSV."
@@ -256,14 +261,14 @@ export default function UpdatePricePage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right font-mono text-surface-300">
-                      ৳ {product.currentCost.toFixed(2)}
+                      ৳ {paise_to_display(product.currentCost)}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <input
                         type="number"
                         step="0.01"
-                        value={product.newCost}
-                        onChange={(e) => handleCostChange(product.id, parseFloat(e.target.value) || 0)}
+                        value={product.newCost ? (product.newCost / 100) : ''}
+                        onChange={(e) => handleCostChange(product.id, parseAmountInput(e.target.value))}
                         className={`w-32 text-right bg-surface-900 border rounded-lg px-3 py-1.5 font-mono text-sm focus:outline-none ${
                           costChanged 
                             ? "border-amber-500/70 text-amber-400 bg-amber-950/20" 
@@ -272,14 +277,14 @@ export default function UpdatePricePage() {
                       />
                     </td>
                     <td className="px-6 py-4 text-right font-mono text-surface-300">
-                      ৳ {product.currentPrice.toFixed(2)}
+                      ৳ {paise_to_display(product.currentPrice)}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <input
                         type="number"
                         step="0.01"
-                        value={product.newPrice}
-                        onChange={(e) => handlePriceChange(product.id, parseFloat(e.target.value) || 0)}
+                        value={product.newPrice ? (product.newPrice / 100) : ''}
+                        onChange={(e) => handlePriceChange(product.id, parseAmountInput(e.target.value))}
                         className={`w-32 text-right bg-surface-900 border rounded-lg px-3 py-1.5 font-mono text-sm focus:outline-none ${
                           priceChanged 
                             ? "border-emerald-500/70 text-emerald-400 bg-emerald-950/20" 

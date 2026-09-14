@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import { printCurrentWindow } from "@/lib/utils/export"
 import { playClick, playSuccess } from "@/lib/utils/audio"
 import { useToast } from "@/hooks/use-toast"
+import { parseAmountInput, paise_to_display } from "@/lib/utils/currency"
 
 interface SaleLineItem {
   id: string
@@ -23,12 +24,11 @@ interface SaleLineItem {
 }
 
 const AVAILABLE_PRODUCTS = [
-  { id: "PROD0001", name: "Motul 7100 4T 10W40 (1L)", sku: "MOT-7100-1L", price: 450.00, stock: 40 },
-  { id: "PROD0002", name: "KYT TT-Course Helmet", sku: "KYT-TTC-01", price: 1200.00, stock: 10 },
-  { id: "PROD0003", name: "Motul C2 Chain Lube 100ml", sku: "MOT-C2-100", price: 120.00, stock: 50 },
-  { id: "PROD0004", name: "NGK Laser Iridium Spark Plug", sku: "NGK-CR9EIX", price: 900.00, stock: 35 },
-  { id: "PROD0005", name: "Yamaha R15 V3 Air Filter Genuine", sku: "YAM-AF-R15", price: 450.00, stock: 24 },
-  { id: "PROD0006", name: "Brembo Sintered Brake Pads (Front)", sku: "BRM-BP-SIN", price: 1650.00, stock: 18 },
+  { id: "p1", name: "Motul 7100 4T", sku: "MOT-1L", price: 45000, stock: 40 },
+  { id: "p2", name: "KYT TT-Course", sku: "KYT-01", price: 120000, stock: 10 },
+  { id: "p3", name: "Chain Lube C2", sku: "MOT-C2", price: 12000, stock: 50 },
+  { id: "p4", name: "NGK Spark Plug", sku: "NGK-CR9", price: 90000, stock: 25 },
+  { id: "p5", name: "Brembo Pads", sku: "BRM-BP", price: 165000, stock: 12 },
 ]
 
 export default function CreateSalePage() {
@@ -42,13 +42,13 @@ export default function CreateSalePage() {
   const [location, setLocation] = useState("RANGPUR BIKE PARLOUR")
   const [items, setItems] = useState<SaleLineItem[]>([
     {
-      id: "PROD0001",
-      name: "Motul 7100 4T 10W40 (1L)",
-      sku: "MOT-7100-1L",
-      price: 450.00,
+      id: "p1",
+      name: "Motul 7100 4T",
+      sku: "MOT-1L",
+      price: 45000,
       qty: 2,
       discount: 0,
-      subtotal: 900.00
+      subtotal: 90000
     }
   ])
 
@@ -67,7 +67,7 @@ export default function CreateSalePage() {
   // Calculations
   const rawSubtotal = items.reduce((sum, item) => sum + item.subtotal, 0)
   const discountedSubtotal = Math.max(0, rawSubtotal - orderDiscount)
-  const taxAmount = (discountedSubtotal * taxRate) / 100
+  const taxAmount = Math.round((discountedSubtotal * taxRate) / 100)
   const grandTotal = discountedSubtotal + taxAmount + shipping
 
   const handleAddItem = (prodId: string) => {
@@ -312,8 +312,8 @@ export default function CreateSalePage() {
                         <div className="font-semibold text-white">{item.name}</div>
                         <div className="text-xs font-mono text-brand-400">{item.sku}</div>
                       </td>
-                      <td className="px-4 py-3 font-mono">
-                        ৳ {item.price.toFixed(2)}
+                      <td className="px-4 py-3 font-mono text-white">
+                        ৳ {paise_to_display(item.price)}
                       </td>
                       <td className="px-4 py-3">
                         <input
@@ -328,14 +328,13 @@ export default function CreateSalePage() {
                         <input
                           type="number"
                           min="0"
-                          value={item.discount}
-                          onChange={(e) => handleUpdateDiscount(idx, parseFloat(e.target.value) || 0)}
+                          step="0.01"
+                          value={item.discount ? (item.discount / 100) : ''}
+                          onChange={(e) => handleUpdateDiscount(idx, parseAmountInput(e.target.value))}
                           className="w-20 px-2 py-1 bg-surface-900 border border-surface-700 rounded text-center text-white font-mono focus:outline-none focus:border-brand-500"
                         />
                       </td>
-                      <td className="px-4 py-3 text-right font-mono font-bold text-white">
-                        ৳ {item.subtotal.toFixed(2)}
-                      </td>
+                      <td className="p-3 text-right font-mono font-bold text-brand-300">৳ {paise_to_display(item.subtotal)}</td>
                       <td className="px-4 py-3 text-center">
                         <button
                           type="button"
@@ -414,7 +413,7 @@ export default function CreateSalePage() {
             <div className="space-y-3 divide-y divide-surface-800/60">
               <div className="flex justify-between items-center text-sm pt-2">
                 <span className="text-surface-400">Items Subtotal:</span>
-                <span className="font-mono text-white">৳ {rawSubtotal.toFixed(2)}</span>
+                <span className="font-mono text-white">৳ {paise_to_display(rawSubtotal)}</span>
               </div>
 
               <div className="flex justify-between items-center text-sm pt-2">
@@ -422,8 +421,9 @@ export default function CreateSalePage() {
                 <input
                   type="number"
                   min="0"
-                  value={orderDiscount}
-                  onChange={(e) => setOrderDiscount(parseFloat(e.target.value) || 0)}
+                  step="0.01"
+                  value={orderDiscount ? (orderDiscount / 100) : ''}
+                  onChange={(e) => setOrderDiscount(parseAmountInput(e.target.value))}
                   className="w-24 px-2 py-1 bg-surface-900 border border-surface-700 rounded text-right text-white font-mono text-xs focus:outline-none focus:border-brand-500"
                 />
               </div>
@@ -446,15 +446,16 @@ export default function CreateSalePage() {
                 <input
                   type="number"
                   min="0"
-                  value={shipping}
-                  onChange={(e) => setShipping(parseFloat(e.target.value) || 0)}
+                  step="0.01"
+                  value={shipping ? (shipping / 100) : ''}
+                  onChange={(e) => setShipping(parseAmountInput(e.target.value))}
                   className="w-24 px-2 py-1 bg-surface-900 border border-surface-700 rounded text-right text-white font-mono text-xs focus:outline-none focus:border-brand-500"
                 />
               </div>
 
               <div className="flex justify-between items-center pt-4">
                 <span className="text-base font-bold text-white uppercase tracking-wider">Grand Total:</span>
-                <span className="text-2xl font-bold font-mono text-brand-400">৳ {grandTotal.toFixed(2)}</span>
+                <span className="text-2xl font-bold font-mono text-brand-400">৳ {paise_to_display(grandTotal)}</span>
               </div>
             </div>
 
@@ -514,22 +515,22 @@ export default function CreateSalePage() {
                     <tr key={idx}>
                       <td className="py-1 font-semibold">{i.name}</td>
                       <td className="py-1 text-center">{i.qty}</td>
-                      <td className="py-1 text-right">৳ {i.subtotal.toFixed(2)}</td>
+                      <td className="py-1 text-right">৳ {paise_to_display(i.subtotal)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
 
               <div className="border-t pt-2 space-y-1 text-right text-[11px]">
-                <div>Subtotal: ৳ {rawSubtotal.toFixed(2)}</div>
-                {orderDiscount > 0 && <div className="text-red-600">Discount: -৳ {orderDiscount.toFixed(2)}</div>}
-                {taxAmount > 0 && <div>VAT ({taxRate}%): ৳ {taxAmount.toFixed(2)}</div>}
-                {shipping > 0 && <div>Freight: ৳ {shipping.toFixed(2)}</div>}
+                <div>Subtotal: ৳ {paise_to_display(rawSubtotal)}</div>
+                {orderDiscount > 0 && <div className="text-red-600">Discount: -৳ {paise_to_display(orderDiscount)}</div>}
+                {taxAmount > 0 && <div>VAT ({taxRate}%): ৳ {paise_to_display(taxAmount)}</div>}
+                {shipping > 0 && <div>Freight: ৳ {paise_to_display(shipping)}</div>}
                 <div className="font-bold text-sm text-black border-t pt-1">
-                  Grand Total: ৳ {grandTotal.toFixed(2)}
+                  Grand Total: ৳ {paise_to_display(grandTotal)}
                 </div>
                 <div className="text-[10px] text-gray-600">
-                  Paid via {paymentMethod}: ৳ {grandTotal.toFixed(2)}
+                  Paid via {paymentMethod}: ৳ {paise_to_display(grandTotal)}
                 </div>
               </div>
 

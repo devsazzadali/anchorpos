@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { exportToCsv, printCurrentWindow } from "@/lib/utils/export"
 import { playClick } from "@/lib/utils/audio"
 import { useToast } from "@/hooks/use-toast"
+import { parseAmountInput, paise_to_display } from "@/lib/utils/currency"
 
 interface SellReturn {
   id: string
@@ -21,7 +22,8 @@ interface SellReturn {
   location: string
   reason: string
   paymentStatus: "Refunded" | "Pending"
-  amount: number
+  totalAmount: number
+  returnAmount: number
 }
 
 const INITIAL_RETURNS: SellReturn[] = [
@@ -36,7 +38,8 @@ const INITIAL_RETURNS: SellReturn[] = [
     location: "RANGPUR BIKE PARLOUR",
     reason: "Customer wanted 400ml aerosol can instead",
     paymentStatus: "Refunded",
-    amount: 120.00
+    totalAmount: 150000,
+    returnAmount: 12000
   },
   {
     id: "SR-002",
@@ -49,7 +52,8 @@ const INITIAL_RETURNS: SellReturn[] = [
     location: "RANGPUR BIKE PARLOUR",
     reason: "Wrong heat range selected by customer",
     paymentStatus: "Refunded",
-    amount: 900.00
+    totalAmount: 1016000,
+    returnAmount: 90000
   }
 ]
 
@@ -66,7 +70,7 @@ export default function SellReturnsPage() {
   const [customer, setCustomer] = useState("Walk-In Customer")
   const [itemDescription, setItemDescription] = useState("Motul 7100 4T 10W40 (1L)")
   const [quantity, setQuantity] = useState(1)
-  const [returnAmount, setReturnAmount] = useState(450)
+  const [returnAmount, setReturnAmount] = useState(45000)
   const [returnReason, setReturnReason] = useState("Customer requested exchange")
 
   const handleCreate = (e: React.FormEvent) => {
@@ -83,7 +87,8 @@ export default function SellReturnsPage() {
       location: "RANGPUR BIKE PARLOUR",
       reason: returnReason,
       paymentStatus: "Refunded",
-      amount: returnAmount
+      totalAmount: parentInvoice === "INV-2026-0001" ? 150000 : 1016000,
+      returnAmount
     }
     setReturns([newRecord, ...returns])
     setIsModalOpen(false)
@@ -115,7 +120,7 @@ export default function SellReturnsPage() {
       { header: "Qty", key: "quantity" },
       { header: "Reason", key: "reason" },
       { header: "Payment Status", key: "paymentStatus" },
-      { header: "Refund Amount (BDT)", key: "amount" }
+      { header: "Refund Amount (BDT)", key: "returnAmount" }
     ], filtered)
     toast({
       title: "Export Completed",
@@ -130,7 +135,7 @@ export default function SellReturnsPage() {
     r.itemDescription.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const totalReturned = returns.reduce((acc, r) => acc + r.amount, 0)
+  const totalReturned = returns.reduce((acc, r) => acc + r.returnAmount, 0)
 
   return (
     <div className="space-y-6 animate-fade-in max-w-7xl mx-auto pb-12">
@@ -174,7 +179,7 @@ export default function SellReturnsPage() {
             <RotateCcw className="w-4 h-4 text-brand-400" />
           </div>
           <div className="text-2xl font-bold font-mono text-white mt-2">
-            ৳ {totalReturned.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+            ৳ {paise_to_display(totalReturned)}
           </div>
           <div className="text-xs text-surface-400 mt-1">{returns.length} customer return records logged</div>
         </div>
@@ -185,7 +190,7 @@ export default function SellReturnsPage() {
             <CheckCircle className="w-4 h-4 text-emerald-400" />
           </div>
           <div className="text-2xl font-bold font-mono text-emerald-400 mt-2">
-            ৳ {totalReturned.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+            ৳ {paise_to_display(totalReturned)}
           </div>
           <div className="text-xs text-surface-400 mt-1">Paid out via cash drawer or store credit</div>
         </div>
@@ -256,7 +261,7 @@ export default function SellReturnsPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right font-mono font-bold text-white">
-                    ৳ {r.amount.toFixed(2)}
+                    ৳ {paise_to_display(r.returnAmount)}
                   </td>
                   <td className="px-6 py-4 text-center">
                     <div className="flex items-center justify-center gap-1">
@@ -314,11 +319,11 @@ export default function SellReturnsPage() {
                     if (inv === "INV-2026-0001") {
                       setCustomer("Walk-In Customer (R15 V3)")
                       setItemDescription("Motul 7100 4T 10W40 (1L)")
-                      setReturnAmount(450)
+                      setReturnAmount(45000)
                     } else {
                       setCustomer("Walk-In Customer (Yamaha FZ)")
                       setItemDescription("NGK Laser Iridium Spark Plug")
-                      setReturnAmount(900)
+                      setReturnAmount(90000)
                     }
                   }}
                   className="w-full bg-surface-900 border border-surface-700 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-brand-500"
@@ -378,8 +383,9 @@ export default function SellReturnsPage() {
                   <label className="block text-xs uppercase font-semibold text-surface-400 mb-1">Refund Amount (৳)</label>
                   <input
                     type="number"
-                    value={returnAmount}
-                    onChange={(e) => setReturnAmount(parseFloat(e.target.value) || 0)}
+                    step="0.01"
+                    value={returnAmount ? (returnAmount / 100) : ''}
+                    onChange={(e) => setReturnAmount(parseAmountInput(e.target.value))}
                     className="w-full bg-surface-900 border border-surface-700 rounded-lg p-2.5 text-sm text-white font-mono focus:outline-none focus:border-brand-500"
                     required
                   />
@@ -448,6 +454,7 @@ export default function SellReturnsPage() {
                   <tr>
                     <th className="p-2 font-semibold">Returned Item</th>
                     <th className="p-2 text-center font-semibold">Qty</th>
+                    <th className="p-2 text-right font-semibold">Total Amount</th>
                     <th className="p-2 text-right font-semibold">Refund Total</th>
                   </tr>
                 </thead>
@@ -458,14 +465,15 @@ export default function SellReturnsPage() {
                       <div className="text-[10px] text-gray-500 italic">Reason: {viewingCreditNote.reason}</div>
                     </td>
                     <td className="p-2 text-center font-mono">{viewingCreditNote.quantity}</td>
-                    <td className="p-2 text-right font-mono font-bold">৳ {viewingCreditNote.amount.toFixed(2)}</td>
+                    <td className="p-2 text-right font-mono font-bold">৳ {paise_to_display(viewingCreditNote.totalAmount)}</td>
+                    <td className="p-2 text-right font-mono font-bold">৳ {paise_to_display(viewingCreditNote.returnAmount)}</td>
                   </tr>
                 </tbody>
               </table>
 
               <div className="flex justify-between items-center pt-2 font-bold text-sm border-t border-gray-200">
                 <span>Total Refunded (Cash/Credit):</span>
-                <span className="font-mono text-base text-emerald-700">৳ {viewingCreditNote.amount.toFixed(2)}</span>
+                <span className="font-mono text-base text-emerald-700">৳ {paise_to_display(viewingCreditNote.returnAmount)}</span>
               </div>
             </div>
 

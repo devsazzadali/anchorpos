@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { exportToCsv, printCurrentWindow } from "@/lib/utils/export"
 import { playClick } from "@/lib/utils/audio"
 import { useToast } from "@/hooks/use-toast"
+import { parseAmountInput, paise_to_display } from "@/lib/utils/currency"
 
 interface PurchaseReturn {
   id: string
@@ -22,7 +23,7 @@ interface PurchaseReturn {
   reason: string
   status: "Completed" | "Pending"
   paymentStatus: "Refunded" | "Pending" | "Partial"
-  totalAmount: number
+  returnAmount: number
 }
 
 const INITIAL_RETURNS: PurchaseReturn[] = [
@@ -38,7 +39,7 @@ const INITIAL_RETURNS: PurchaseReturn[] = [
     reason: "Defective cap seal during unboxing",
     status: "Completed",
     paymentStatus: "Refunded",
-    totalAmount: 1140.00
+    returnAmount: 18000
   },
   {
     id: "PR-0002",
@@ -52,7 +53,7 @@ const INITIAL_RETURNS: PurchaseReturn[] = [
     reason: "Wrong SKU dispatched by vendor",
     status: "Completed",
     paymentStatus: "Refunded",
-    totalAmount: 900.00
+    returnAmount: 32000
   },
   {
     id: "PR-0003",
@@ -66,7 +67,7 @@ const INITIAL_RETURNS: PurchaseReturn[] = [
     reason: "Awaiting supplier credit adjustment",
     status: "Pending",
     paymentStatus: "Pending",
-    totalAmount: 1650.00
+    returnAmount: 165000
   }
 ]
 
@@ -84,7 +85,7 @@ export default function PurchaseReturnsPage() {
   const [itemName, setItemName] = useState("Motul 7100 4T 10W40 (1L)")
   const [returnReason, setReturnReason] = useState("Defective packaging / seal broken")
   const [returnQty, setReturnQty] = useState(1)
-  const [returnAmount, setReturnAmount] = useState(380)
+  const [returnAmount, setReturnAmount] = useState(45000)
 
   const handleCreateReturn = (e: React.FormEvent) => {
     e.preventDefault()
@@ -101,7 +102,7 @@ export default function PurchaseReturnsPage() {
       reason: returnReason,
       status: "Completed",
       paymentStatus: "Pending",
-      totalAmount: returnAmount
+      returnAmount: returnAmount
     }
     setReturns([newRecord, ...returns])
     setIsCreateOpen(false)
@@ -134,7 +135,7 @@ export default function PurchaseReturnsPage() {
       { header: "Reason", key: "reason" },
       { header: "Status", key: "status" },
       { header: "Refund Status", key: "paymentStatus" },
-      { header: "Amount (BDT)", key: "totalAmount" }
+      { header: "Amount (BDT)", key: "returnAmount" }
     ], filtered)
     toast({
       title: "Export Completed",
@@ -149,8 +150,8 @@ export default function PurchaseReturnsPage() {
     r.itemReturned.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const totalReturnAmount = returns.reduce((acc, r) => acc + r.totalAmount, 0)
-  const pendingRefunds = returns.filter(r => r.paymentStatus === "Pending").reduce((acc, r) => acc + r.totalAmount, 0)
+  const totalReturned = returns.reduce((acc, r) => acc + r.returnAmount, 0)
+  const pendingRefunds = returns.filter(r => r.paymentStatus === "Pending").reduce((acc, r) => acc + r.returnAmount, 0)
 
   return (
     <div className="space-y-6 animate-fade-in max-w-7xl mx-auto pb-12">
@@ -194,7 +195,7 @@ export default function PurchaseReturnsPage() {
             <RotateCcw className="w-4 h-4 text-brand-400" />
           </div>
           <div className="text-2xl font-bold font-mono text-white mt-2">
-            ৳ {totalReturnAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+            ৳ {paise_to_display(totalReturned)}
           </div>
           <div className="text-xs text-surface-400 mt-1">{returns.length} return records logged</div>
         </div>
@@ -205,7 +206,7 @@ export default function PurchaseReturnsPage() {
             <Clock className="w-4 h-4 text-amber-400" />
           </div>
           <div className="text-2xl font-bold font-mono text-amber-400 mt-2">
-            ৳ {pendingRefunds.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+            ৳ {paise_to_display(pendingRefunds)}
           </div>
           <div className="text-xs text-surface-400 mt-1">Awaiting supplier credit settlement</div>
         </div>
@@ -216,7 +217,7 @@ export default function PurchaseReturnsPage() {
             <CheckCircle className="w-4 h-4 text-emerald-400" />
           </div>
           <div className="text-2xl font-bold font-mono text-emerald-400 mt-2">
-            ৳ {(totalReturnAmount - pendingRefunds).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+            ৳ {paise_to_display(totalReturned - pendingRefunds)}
           </div>
           <div className="text-xs text-surface-400 mt-1">Credited / Cash refunded to account</div>
         </div>
@@ -293,7 +294,7 @@ export default function PurchaseReturnsPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right font-mono font-bold text-white">
-                    ৳ {ret.totalAmount.toFixed(2)}
+                    ৳ {paise_to_display(ret.returnAmount)}
                   </td>
                   <td className="px-6 py-4 text-center">
                     <div className="flex items-center justify-center gap-1">
@@ -355,11 +356,11 @@ export default function PurchaseReturnsPage() {
                     } else if (val === "PO2026/0002") {
                       setSupplierName("Yamaha Genuine Parts (ACI)")
                       setItemName("Yamaha R15 V3 Air Filter")
-                      setReturnAmount(returnQty * 450)
+                      setReturnAmount(45000)
                     } else {
                       setSupplierName("Brembo Racing Imports BD")
                       setItemName("Brembo Brake Pads")
-                      setReturnAmount(returnQty * 1650)
+                      setReturnAmount(165000)
                     }
                   }}
                   className="w-full bg-surface-900 border border-surface-700 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-brand-500"
@@ -422,9 +423,11 @@ export default function PurchaseReturnsPage() {
                   <label className="block text-xs uppercase font-semibold text-surface-400 mb-1">Total Debit Amount (৳)</label>
                   <input
                     type="number"
-                    value={returnAmount}
-                    onChange={(e) => setReturnAmount(parseFloat(e.target.value) || 0)}
+                    step="0.01"
+                    value={returnAmount ? (returnAmount / 100) : ''}
+                    onChange={(e) => setReturnAmount(parseAmountInput(e.target.value))}
                     className="w-full bg-surface-900 border border-surface-700 rounded-lg p-2.5 text-sm text-white font-mono focus:outline-none focus:border-brand-500"
+                    required
                   />
                 </div>
               </div>
@@ -501,14 +504,14 @@ export default function PurchaseReturnsPage() {
                       <div className="text-[10px] text-gray-500 italic">Reason: {viewingDebitNote.reason}</div>
                     </td>
                     <td className="p-2 text-center font-mono">{viewingDebitNote.quantity}</td>
-                    <td className="p-2 text-right font-mono font-bold">৳ {viewingDebitNote.totalAmount.toFixed(2)}</td>
+                    <td className="p-2 text-right font-mono font-bold text-brand-300">৳ {paise_to_display(viewingDebitNote.returnAmount)}</td>
                   </tr>
                 </tbody>
               </table>
 
               <div className="flex justify-between items-center pt-2 font-bold text-sm border-t border-gray-200">
                 <span>Total Amount Debited:</span>
-                <span className="font-mono text-base text-red-600">৳ {viewingDebitNote.totalAmount.toFixed(2)}</span>
+                <span className="font-mono text-base text-red-600">৳ {paise_to_display(viewingDebitNote.returnAmount)}</span>
               </div>
 
               <div className="text-[10px] text-gray-500 pt-2 border-t border-dashed">

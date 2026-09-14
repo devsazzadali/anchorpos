@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
-import { formatCurrency, toBDTPaise } from "@/lib/utils/currency"
+import { formatCurrency, toBDTPaise, parseAmountInput } from "@/lib/utils/currency"
 
 export default function CreateProductPage() {
   const router = useRouter()
@@ -227,8 +227,8 @@ export default function CreateProductPage() {
                       step="0.01"
                       placeholder="0.00"
                       onChange={(e) => {
-                        const val = parseFloat(e.target.value);
-                        if (!isNaN(val)) form.setValue("unit_price", toBDTPaise(val));
+                        const val = parseAmountInput(e.target.value);
+                        if (!isNaN(val)) form.setValue("unit_price", val);
                       }}
                       className={`pl-8 bg-surface-900 border-surface-700 text-white ${errors.unit_price ? 'border-red-500' : ''}`}
                     />
@@ -245,8 +245,8 @@ export default function CreateProductPage() {
                       step="0.01"
                       placeholder="0.00"
                       onChange={(e) => {
-                        const val = parseFloat(e.target.value);
-                        if (!isNaN(val)) form.setValue("purchase_price", toBDTPaise(val));
+                        const val = parseAmountInput(e.target.value);
+                        if (!isNaN(val)) form.setValue("purchase_price", val);
                       }}
                       className="pl-8 bg-surface-900 border-surface-700 text-white"
                     />

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { exportToCsv } from "@/lib/utils/export"
 import { playClick } from "@/lib/utils/audio"
 import { useToast } from "@/hooks/use-toast"
+import { parseAmountInput, paise_to_display } from "@/lib/utils/currency"
 
 interface DiscountItem {
   id: string
@@ -35,7 +36,7 @@ const INITIAL_DISCOUNTS: DiscountItem[] = [
     startsAt: "2026-09-01",
     endsAt: "2026-09-30",
     discountType: "Fixed",
-    discountValue: 150.00,
+    discountValue: 50000,
     applicableTo: "Helmet Standard",
     status: "Active"
   },
@@ -59,12 +60,14 @@ export default function DiscountsPage() {
   const [editingDiscount, setEditingDiscount] = useState<DiscountItem | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
+  const totalDiscountsValue = discounts.reduce((acc, d) => acc + (d.discountType === "Fixed" ? d.discountValue : 0), 0)
+
   // Form State
   const [name, setName] = useState("")
   const [startsAt, setStartsAt] = useState("2026-09-15")
   const [endsAt, setEndsAt] = useState("2026-10-15")
   const [discountType, setDiscountType] = useState<"Percentage" | "Fixed">("Percentage")
-  const [discountValue, setDiscountValue] = useState(10)
+  const [discountValue, setDiscountValue] = useState(0)
   const [applicableTo, setApplicableTo] = useState("Parts")
 
   const handleOpenCreate = () => {
@@ -73,7 +76,7 @@ export default function DiscountsPage() {
     setStartsAt("2026-09-15")
     setEndsAt("2026-10-15")
     setDiscountType("Percentage")
-    setDiscountValue(10)
+    setDiscountValue(0)
     setApplicableTo("Parts")
     setEditingDiscount(null)
     setIsModalOpen(true)
@@ -187,6 +190,9 @@ export default function DiscountsPage() {
               Rangpur Bike Parlour
             </span>
           </div>
+          <div className="text-2xl font-bold font-mono text-white mt-2">
+            ৳ {paise_to_display(totalDiscountsValue)}
+          </div>
           <p className="text-surface-400 mt-1">
             Manage promotional campaigns, coupon rules, and percentage discounts
           </p>
@@ -248,8 +254,8 @@ export default function DiscountsPage() {
                       {d.name}
                     </div>
                   </td>
-                  <td className="px-6 py-4 font-mono font-bold text-emerald-400">
-                    {d.discountType === "Percentage" ? `${d.discountValue}% OFF` : `৳ ${d.discountValue.toFixed(2)} OFF`}
+                  <td className="px-6 py-4 text-center font-mono font-bold text-white">
+                    {d.discountType === "Fixed" ? `৳ ${paise_to_display(d.discountValue)}` : `${d.discountValue}%`}
                   </td>
                   <td className="px-6 py-4 text-xs text-surface-200">
                     <span className="px-2 py-0.5 rounded bg-surface-800 border border-surface-700">
@@ -342,9 +348,16 @@ export default function DiscountsPage() {
                   <label className="block text-xs uppercase font-semibold text-surface-400 mb-1">Value</label>
                   <input
                     type="number"
-                    value={discountValue}
-                    onChange={(e) => setDiscountValue(parseFloat(e.target.value) || 0)}
-                    className="w-full bg-surface-900 border border-surface-700 rounded-lg p-2.5 text-sm text-white font-mono focus:outline-none focus:border-brand-500"
+                    step="0.01"
+                    value={discountType === "Fixed" && discountValue ? (discountValue / 100) : discountValue || ''}
+                    onChange={(e) => {
+                      if (discountType === "Fixed") {
+                        setDiscountValue(parseAmountInput(e.target.value))
+                      } else {
+                        setDiscountValue(parseFloat(e.target.value) || 0)
+                      }
+                    }}
+                    className="w-full bg-surface-900 border border-surface-700 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-brand-500"
                     required
                   />
                 </div>
